@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rss-feed-processor
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./datasets:/app/datasets
+      - ./logs:/app/logs
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+      - PYTHONUNBUFFERED=1
+      # Uncomment and set your Hugging Face token
+      # - HF_TOKEN=your_huggingface_token_here
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Uncomment to add Redis for caching
+  # redis:
+  #   image: redis:alpine
+  #   container_name: rss-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+
+  # Uncomment to add a monitoring dashboard
+  # monitor:
+  #   image: dockersamples/visualizer
+  #   container_name: rss-monitor
+  #   ports:
+  #     - "8080:8080"
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #   deploy:
+  #     placement:
+  #       constraints: [node.role == manager]
+
+# Uncomment if using Redis
+# volumes:
+#   redis_data:
